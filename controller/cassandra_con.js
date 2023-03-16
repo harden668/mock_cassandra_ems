@@ -27,11 +27,16 @@ client.connect()
 
 //Packaging prepare execute
 async function queryData(sql, values) {
-  const parameters = [values];
+  const parameters = values;
   const result = await client.execute(sql, parameters, { prepare: true });
   return result.rows[0];
 }
-module.exports = queryData;
+async function InsertData(sql, values) {
+  const parameters = values;
+  await client.execute(sql, parameters, { prepare: true });
+  return true;
+}
+module.exports = InsertData;
 
 
 

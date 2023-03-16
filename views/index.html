@@ -14,246 +14,53 @@
       <table>
         <thead>
           <tr>
-            <th>mock_name</th>
+            <th>table_name</th>
             <th>interval_time(/ms)</th>
-            <th></th>
-            <th></th>
-            <th></th>
+            <th style="text-align: center;">编辑</th>
+            <th style="text-align: center;">选择数据库</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>输入电流1</td>
+            <td>inverter_data</td>
             <td>4000</td>
-            <td>
-              <button class="btn btn-danger" onclick="btn_Edit(this)">Edit</button>
+            <td class="btn_edit">
+              <button class="btn" onclick="btn_Edit(this)">Edit</button>
             </td>
             <td>
-              <button class="btn" onclick="btn_Insert(this)">
-                <!-- <div class="text"> -->
-                <div class="text">Insert</div>
-                <div class="loading"></div>
-                <!-- </div> -->
-              </button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_stop(this)">stop</button>
+              <div class="btn_control">
+                <button class="btn" onclick="btn_Insert(this)">Cassandra</button>
+                <button class="btn" onclick="btn_Insert(this)">Redis</button>
+                <button class="btn" onclick="btn_Insert(this)">Kafka</button>
+              </div>
             </td>
           </tr>
           <tr>
-            <td>输入电压1</td>
+            <td>pv_optimizer_data</td>
             <td>4000</td>
-            <td>
-              <button class="btn btn-danger" onclick="btn_Edit(this)">Edit</button>
+            <td class="btn_edit">
+              <button class="btn" onclick="btn_Edit(this)">Edit</button>
             </td>
             <td>
-              <button class="btn" onclick="btn_Insert(this)">
-                <!-- <div class="text"> -->
-                <div class="text">Insert</div>
-                <div class="loading"></div>
-                <!-- </div> -->
-              </button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_stop(this)">stop</button>
+              <div class="btn_control">
+                <button class="btn" onclick="btn_Insert(this)">Cassandra</button>
+                <button class="btn" onclick="btn_Insert(this)">Redis</button>
+                <button class="btn" onclick="btn_Insert(this)">Kafka</button>
+              </div>
             </td>
           </tr>
           <tr>
-            <td>电网功率</td>
+            <td>statistical_data</td>
             <td>4000</td>
-            <td>
-              <button class="btn btn-danger" onclick="btn_Edit(this)">Edit</button>
+            <td class="btn_edit">
+              <button class="btn" onclick="btn_Edit(this)">Edit</button>
             </td>
             <td>
-              <button class="btn" onclick="btn_Insert(this)">
-                <!-- <div class="text"> -->
-                <div class="text">Insert</div>
-                <div class="loading"></div>
-                <!-- </div> -->
-              </button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_stop(this)">stop</button>
-            </td>
-          </tr>
-          <tr>
-            <td>电池功率</td>
-            <td>4000</td>
-            <td>
-              <button class="btn btn-danger" onclick="btn_Edit(this)">Edit</button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_Insert(this)">
-                <!-- <div class="text"> -->
-                <div class="text">Insert</div>
-                <div class="loading"></div>
-                <!-- </div> -->
-              </button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_stop(this)">stop</button>
-            </td>
-          </tr>
-          <tr>
-            <td>用电功率</td>
-            <td>4000</td>
-            <td>
-              <button class="btn btn-danger" onclick="btn_Edit(this)">Edit</button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_Insert(this)">
-                <!-- <div class="text"> -->
-                <div class="text">Insert</div>
-                <div class="loading"></div>
-                <!-- </div> -->
-              </button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_stop(this)">stop</button>
-            </td>
-          </tr>
-          <tr>
-            <td>PV 日输出电量</td>
-            <td>4000</td>
-            <td>
-              <button class="btn btn-danger" onclick="btn_Edit(this)">Edit</button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_Insert(this)">
-                <!-- <div class="text"> -->
-                <div class="text">Insert</div>
-                <div class="loading"></div>
-                <!-- </div> -->
-              </button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_stop(this)">stop</button>
-            </td>
-          </tr>
-          <tr>
-            <td>设备日发电量</td>
-            <td>4000</td>
-            <td>
-              <button class="btn btn-danger" onclick="btn_Edit(this)">Edit</button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_Insert(this)">
-                <!-- <div class="text"> -->
-                <div class="text">Insert</div>
-                <div class="loading"></div>
-                <!-- </div> -->
-              </button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_stop(this)">stop</button>
-            </td>
-          </tr>
-          <tr>
-            <td>本地负载日用电量</td>
-            <td>4000</td>
-            <td>
-              <button class="btn btn-danger" onclick="btn_Edit(this)">Edit</button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_Insert(this)">
-                <!-- <div class="text"> -->
-                <div class="text">Insert</div>
-                <div class="loading"></div>
-                <!-- </div> -->
-              </button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_stop(this)">stop</button>
-            </td>
-          </tr>
-          <tr>
-            <td>逆变日输出上网电量</td>
-            <td>4000</td>
-            <td>
-              <button class="btn btn-danger" onclick="btn_Edit(this)">Edit</button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_Insert(this)">
-                <!-- <div class="text"> -->
-                <div class="text">Insert</div>
-                <div class="loading"></div>
-                <!-- </div> -->
-              </button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_stop(this)">stop</button>
-            </td>
-          </tr>
-          <tr>
-            <td>逆变日输出EPS电量</td>
-            <td>4000</td>
-            <td>
-              <button class="btn btn-danger" onclick="btn_Edit(this)">Edit</button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_Insert(this)">
-                <!-- <div class="text"> -->
-                <div class="text">Insert</div>
-                <div class="loading"></div>
-                <!-- </div> -->
-              </button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_stop(this)">stop</button>
-            </td>
-          </tr>
-          <tr>
-            <td>设备日馈入电量</td>
-            <td>4000</td>
-            <td>
-              <button class="btn btn-danger" onclick="btn_Edit(this)">Edit</button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_Insert(this)">
-                <!-- <div class="text"> -->
-                <div class="text">Insert</div>
-                <div class="loading"></div>
-                <!-- </div> -->
-              </button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_stop(this)">stop</button>
-            </td>
-          </tr>
-          <tr>
-            <td>当前运行模式</td>
-            <td>4000</td>
-            <td>
-              <button class="btn btn-danger" onclick="btn_Edit(this)">Edit</button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_Insert(this)">
-                <!-- <div class="text"> -->
-                <div class="text">Insert</div>
-                <div class="loading"></div>
-                <!-- </div> -->
-              </button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_stop(this)">stop</button>
-            </td>
-          </tr>
-          <tr>
-            <td>设备运行状态</td>
-            <td>4000</td>
-            <td>
-              <button class="btn btn-danger" onclick="btn_Edit(this)">Edit</button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_Insert(this)">
-                <!-- <div class="text"> -->
-                <div class="text">Insert</div>
-                <div class="loading"></div>
-                <!-- </div> -->
-              </button>
-            </td>
-            <td>
-              <button class="btn" onclick="btn_stop(this)">stop</button>
+              <div class="btn_control">
+                <button class="btn" onclick="btn_Insert(this)">Cassandra</button>
+                <button class="btn" onclick="btn_Insert(this)">Redis</button>
+                <button class="btn" onclick="btn_Insert(this)">Kafka</button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -261,85 +68,44 @@
     </div>
     <!-- 日志显示 -->
     <div class="log_box">
-      <h1 style="text-align: center;">日志信息</h1>
+      <div class="log_title">日志信息</div>
       <div class="log_content">
-
       </div>
     </div>
   </div>
 </body>
 <script>
-  //输入电流1
-  var Insert_current;
-  //输入电压1
-  var Insert_voltage;
-  function btn_Edit() {
-    alert("Please enter");
-  }
+  var interval;
   function btn_Insert(val) {
-    $(val).children(".text").css('display', 'none');
-    $(val).children(".loading").css('display', 'block');
-    var columns = $(val).parent().parent().find('td');
-    var data = [];
-    for (var i = 0; i < columns.length - 2; i++) {
-      data.push(columns.eq(i).text());
+    //判断当前是否处于模拟状态
+    var state = val.classList.contains('loading');
+    console.log('state', state);
+    if (!state) {
+      // 添加 loading 样式
+      val.classList.add("loading");
+      var columns = $(val).parent().parent().parent().find('td');
+      var data = [];
+      for (var i = 0; i < columns.length - 2; i++) {
+        data.push(columns.eq(i).text());
+      }
+      // console.log(data); ['inverter_data', '4000']
+      let value = $(val).text();
+      let api = data[0];
+      console.log('/' + api);
+      interval = setInterval(() => {
+        $.post('/' + api, {
+          database: value
+        }, function (res) {
+          //返回的数据在这里进行处理
+          console.log(res.data);
+          let logDiv = "<div>" + res.data + "</div>"
+          $('.log_content').append(logDiv);
+        })
+      }, data[1]);
+    } else {
+      val.classList.remove("loading");
+      clearInterval(interval);
     }
-    console.log(Number(data[1]));
-    switch (data[0]) {
-      case "输入电流1":
-        //输入电流1
-        Insert_current = setInterval(() => {
-          $.post('/Insert_current', {
-            mock_name: data[0],
-            interval_time: data[1]
-          }, function (res) {
-            //返回的数据在这里进行处理
-            console.log('res==', res.data);
-            let logDiv = "<div>" + res.data + "</div>"
-            $('.log_content').append(logDiv);
-          })
-        }, Number(data[1]));
-        break;
-      case "输入电压1":
-        //输入电压1
-        Insert_voltage = setInterval(() => {
-          $.post('/Insert_voltage', {
-            mock_name: data[0],
-            interval_time: data[1]
-          }, function (res) {
-            //返回的数据在这里进行处理
-            console.log(res.data);
-            let logDiv = "<div>" + res.data + "</div>"
-            $('.log_content').append(logDiv);
-          })
-        }, Number(data[1]));
-        break;
-
-      default:
-        alert("Not this api");
-        break;
-    }
-
-  }
-
-  function btn_stop(val) {
-    var columns = $(val).parent().parent().find('td');
-    var data = [];
-    for (var i = 0; i < columns.length - 2; i++) {
-      data.push(columns.eq(i).text());
-    }
-    switch (data[0]) {
-      case "输入电流1":
-        clearInterval(Insert_current);
-        break;
-      case "输入电压1":
-        clearInterval(Insert_voltage);
-        break;
-      default:
-        break;
-    }
-    $(val).parent().prev().children().children(".loading").css('display', 'none');
-    $(val).parent().prev().children().children(".text").css('display', 'block');
   }
 </script>
 <style>
@@ -364,6 +130,16 @@
     box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.12);
   }
 
+  .log_title {
+    font-size: 2vw;
+    text-align: center;
+    padding: 1vw;
+    background-color: #4CAF50;
+    font-weight: bold;
+    color: #333;
+    text-shadow: 1px 1px #ccc;
+  }
+
   .log_content {
     display: flex;
     height: 85%;
@@ -372,13 +148,20 @@
   }
 
   .log_content div {
-    padding: 2vh;
+    background-color: #f2f2f2;
+    border-left: 6px solid #4CAF50;
+    font-family: Arial, sans-serif;
+    padding: 10px;
+    margin: 10px 10px 0px 10px;
+    color: #666;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 2px 2px #ccc;
   }
 
   table {
     border-collapse: collapse;
     width: 100%;
-    height: 100%;
     font-family: Arial, sans-serif;
     color: #444;
     border: 1px solid #f2f2f2;
@@ -386,20 +169,43 @@
 
   thead {
     height: 20%;
+    background-color: #4CAF50;
   }
 
   th {
     position: sticky;
     top: 0;
     /* 首行永远固定在头部  */
-    background-color: #f2f2f2;
     text-align: left;
     padding: 8px;
+    /* border: 1px solid #f2f2f2; */
   }
 
   tbody {
     height: 80%;
     overflow-y: scroll;
+  }
+
+  .btn_control {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+  }
+
+  .btn_control .btn {
+    width: 30%;
+    font-size: 0.6vw;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 1vh 1vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    border-radius: 4px;
+    cursor: pointer;
   }
 
   td {
@@ -408,17 +214,43 @@
     padding: 8px;
   }
 
-  tr:nth-child(odd) {
+  tbody tr:nth-child(odd) {
     background-color: #f2f2f2;
   }
 
-  tr:hover {
+  tbody tr:hover {
     background-color: #e6e6e6;
   }
 
-  .btn {
-    width: 4vw;
-    height: 5vh;
+  .loading:before {
+    content: "";
+    display: inline-block;
+    width: 0.6vw;
+    height: 0.6vw;
+    margin-right: 5px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    border-top-color: transparent;
+    border-right-color: transparent;
+    animation: loading 0.75s linear infinite;
+  }
+
+  @keyframes loading {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .btn_edit {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .btn_edit .btn {
+    width: 80%;
+    font-size: 0.6vw;
+    padding: auto;
     background-color: #4CAF50;
     color: white;
     border: none;
@@ -431,38 +263,8 @@
     cursor: pointer;
   }
 
-  .btn-danger {
-    background-color: #f44336;
-  }
-
   .btn:hover {
     background-color: #3e8e41;
-  }
-
-  .text {
-    display: block;
-  }
-
-  .loading {
-    display: none;
-    width: 10px;
-    height: 10px;
-    top: 0;
-    left: 0;
-    border: 3px solid #ddd;
-    border-top-color: #555;
-    border-radius: 50%;
-    animation: spin 1s infinite linear;
-  }
-
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-
-    to {
-      transform: rotate(360deg);
-    }
   }
 
   .btn:active {
