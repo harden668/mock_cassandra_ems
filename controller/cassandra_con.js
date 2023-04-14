@@ -24,19 +24,24 @@ client.connect()
     }
   })
   .catch(err => console.error(err));
-
 //Packaging prepare execute
-async function queryData(sql, values) {
-  const parameters = values;
-  const result = await client.execute(sql, parameters, { prepare: true });
-  return result.rows[0];
+async function queryData(sql) {
+  const result = await client.execute(sql, { prepare: true });
+  if (result.rows.length > 0) {
+    return result.rows[0];
+  } else {
+    return false;
+  }
 }
 async function InsertData(sql, values) {
   const parameters = values;
   await client.execute(sql, parameters, { prepare: true });
   return true;
 }
-module.exports = InsertData;
+module.exports = {
+  InsertData,
+  queryData,
+}
 
 
 

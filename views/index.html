@@ -23,7 +23,7 @@
         <tbody>
           <tr>
             <td>inverter_data</td>
-            <td>4000</td>
+            <td>300000</td>
             <td class="btn_edit">
               <button class="btn" onclick="btn_Edit(this)">Edit</button>
             </td>
@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td>pv_optimizer_data</td>
-            <td>4000</td>
+            <td>300000</td>
             <td class="btn_edit">
               <button class="btn" onclick="btn_Edit(this)">Edit</button>
             </td>
@@ -51,7 +51,21 @@
           </tr>
           <tr>
             <td>statistical_data</td>
-            <td>4000</td>
+            <td>300000</td>
+            <td class="btn_edit">
+              <button class="btn" onclick="btn_Edit(this)">Edit</button>
+            </td>
+            <td>
+              <div class="btn_control">
+                <button class="btn" onclick="btn_Insert(this)">Cassandra</button>
+                <button class="btn" onclick="btn_Insert(this)">Redis</button>
+                <button class="btn" onclick="btn_Insert(this)">Kafka</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>power_station</td>
+            <td>300000</td>
             <td class="btn_edit">
               <button class="btn" onclick="btn_Edit(this)">Edit</button>
             </td>
@@ -88,7 +102,7 @@
       for (var i = 0; i < columns.length - 2; i++) {
         data.push(columns.eq(i).text());
       }
-      // console.log(data); ['inverter_data', '4000']
+      // console.log(data); ['inverter_data', '300000']
       let value = $(val).text();
       let api = data[0];
       console.log('/' + api);
