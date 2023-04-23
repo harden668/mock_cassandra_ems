@@ -79,7 +79,6 @@ router.post('/inverter_data', async function (req, res, next) {
       device_status: device_status,
       grid_power: grid_power,
       hardware_error: hardware_error,
-      mac_address: mac_address,
       power_consumption: power_consumption,
       real_time_power: real_time_power,
       pv_output_energy_day: global.pv_output_energy_day,
@@ -195,7 +194,9 @@ router.post('/pv_optimizer_data', async function (req, res, next) {
     let fault_code_text = ['PV电压异常', '电网异常', '绝缘阻抗异常', '漏电流异常', '通讯异常', '输出功率偏低'];
     let fault_code = fault_code_text[Math.floor(Math.random() * fault_code_text.length)];
     //mac地址
-    let mac_address = '69:23:9c:76:c8:02';
+    let mac_address = '69:23:9c:76:c8:03';
+    // sn
+    let Optimizer_sn = '0123456789abcdef';
     //输入电压1
     let input_voltage1 = Math.floor(Math.random() * 200) + 100;
     //输入电压2
@@ -221,6 +222,7 @@ router.post('/pv_optimizer_data', async function (req, res, next) {
           input_voltage1,
           input_voltage2,
           mac_address,
+          Optimizer_sn,
           output_current,
           output_voltage,
           power_generation1,
@@ -229,7 +231,7 @@ router.post('/pv_optimizer_data', async function (req, res, next) {
           temperature,
           timestamp
     )
-    VALUES( ?,?,?,?,?,?,?,?,?,?,?,?,?,?,? )`;
+    VALUES( ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? )`;
     let params = [
       fault_code,
       input_current1,
@@ -239,6 +241,7 @@ router.post('/pv_optimizer_data', async function (req, res, next) {
       input_voltage1,
       input_voltage2,
       mac_address,
+      Optimizer_sn,
       output_current,
       output_voltage,
       global.power_generation1,
@@ -256,6 +259,7 @@ router.post('/pv_optimizer_data', async function (req, res, next) {
       input_voltage1: input_voltage1,
       input_voltage2: input_voltage2,
       mac_address: mac_address,
+      Optimizer_sn: Optimizer_sn,
       output_current: output_current,
       output_voltage: output_voltage,
       power_generation1: global.power_generation1,
@@ -540,21 +544,12 @@ router.post('/power_station', async function (req, res, next) {
     let station_id = 1;
     //总发电功率
     let real_time_power = Math.floor(Math.random() * 200) + 100;
-    //总用电功率
-    let power_consumption = Math.floor(Math.random() * 100) + 10;
-    //总电网功率
-    let grid_power = Math.floor(Math.random() * 50) + 10;
-    //总电池功率
-    let battery_power = Math.floor(Math.random() * 100) + 50;
     //时间戳
     let timestamp = new Date();
     let sql = `INSERT INTO ems.power_station(
           station_id,
           timestamp,
-          real_time_power ,
-          power_consumption ,
-          grid_power ,
-          battery_power ,
+          real_time_power ,,
           day_full_hours,
           month_full_hours,
           year_full_hours,
@@ -565,9 +560,6 @@ router.post('/power_station', async function (req, res, next) {
       station_id,
       timestamp,
       real_time_power,
-      power_consumption,
-      grid_power,
-      battery_power,
       global.day_full_hours,
       global.month_full_hours,
       global.year_full_hours,
@@ -577,9 +569,6 @@ router.post('/power_station', async function (req, res, next) {
       station_id: station_id,
       timestamp: timestamp,
       real_time_power: real_time_power,
-      power_consumption: power_consumption,
-      grid_power: grid_power,
-      battery_power: battery_power,
       day_full_hours: global.day_full_hours,
       month_full_hours: global.month_full_hours,
       year_full_hours: global.year_full_hours,
@@ -666,4 +655,181 @@ router.post('/power_station', async function (req, res, next) {
     console.log(error)
   }
 })
+
+//模拟redis发布订阅
+//inverter_power_data
+router.post('/redis_inverter_data', async function (req, res, next) {
+  try {
+    //电站id
+    let station_id = '3200';
+    //逆变器采集器唯一标识：macAddress
+    let mac_address = '69:23:9c:76:c8:01'
+    //电池功率
+    let battery_power = Math.floor(Math.random() * 200) + 100;
+    //电网功率
+    let grid_power = Math.floor(Math.random() * 200) + 100;
+    //电池功率
+    let power_consumption = Math.floor(Math.random() * 200) + 100;
+    //发电总功率
+    let real_time_power = Math.floor(Math.random() * 200) + 100;
+    //最后更新时间
+    let last_updated = new Date();
+    const { database } = req.body;
+    console.log(database);
+    let message = {
+      battery_power: battery_power,
+      grid_power: grid_power,
+      mac_address: mac_address,
+      station_id: station_id,
+      power_consumption: power_consumption,
+      real_time_power: real_time_power,
+      pv_output_energy_day: global.pv_output_energy_day,
+      inverter_grid_energy_day: global.inverter_grid_energy_day,
+      inverter_eps_energy_day: global.inverter_eps_energy_day,
+      device_generation_energy_day: global.device_generation_energy_day,
+      local_consumption_energy_day: global.local_consumption_energy_day,
+      device_feed_in_energy_day: global.device_feed_in_energy_day,
+      day_full_hours: global.day_full_hours,
+      last_updated: last_updated
+    }
+    if (database == 'Redis') {
+      //保存数据到redis
+      console.log('保存数据到redis');
+      redis.set('inverter_data', JSON.stringify(message))
+        .then(() => {
+          //发布频道
+          redis.publish('inverter_power_data', 'inverter_data');
+          let log_data = '成功向redis_inverter_data插入一条数据';
+          global.pv_output_energy_day = global.pv_output_energy_day + Math.floor(Math.random() * 10) + 1;
+          global.inverter_grid_energy_day = global.inverter_grid_energy_day + Math.floor(Math.random() * 10) + 1;
+          global.inverter_eps_energy_day = global.inverter_eps_energy_day + Math.floor(Math.random() * 10) + 1;
+          global.device_generation_energy_day = global.device_generation_energy_day + Math.floor(Math.random() * 10) + 1;
+          global.local_consumption_energy_day = global.local_consumption_energy_day + Math.floor(Math.random() * 10) + 1;
+          global.device_feed_in_energy_day = global.device_feed_in_energy_day + Math.floor(Math.random() * 10) + 1;
+          global.day_full_hours = global.day_full_hours + 0.1;
+          res.status(200).json({
+            code: 200,
+            summary: 'success',
+            data: log_data
+          })
+        })
+    } else {
+      res.status(200).json({
+        code: 200,
+        summary: 'success',
+        data: 'not found this database'
+      })
+    }
+  } catch (error) {
+    console.log(error)
+  }
+})
+
+//power_status_updates
+router.post('/power_status_updates', async function (req, res, next) {
+  try {
+    //经销商id
+    let station_id = '3200';
+    //逆变器采集器唯一标识：macAddress
+    let mac_address = '69:23:9c:76:c8:01'
+    //电站连接状态  "1111:0,1000:1"
+    let connect_status = "1111:0"
+
+    //逆变器状态
+    let inverter_status = Math.floor(Math.random() + 0.5);
+    //最后更新时间
+    let last_updated = new Date();
+    const { database } = req.body;
+    console.log(database);
+    let message = {
+      station_id: station_id,
+      mac_address: mac_address,
+      connect_status: connect_status,
+      inverter_status: inverter_status,
+      last_updated: last_updated
+    }
+    if (database == 'Redis') {
+      //保存数据到redis
+      console.log('保存数据到redis');
+      redis.set('status_updates', JSON.stringify(message))
+        .then(() => {
+          //发布频道
+          redis.publish('power_status_updates', 'status_updates');
+          let log_data = '成功向power_status_updates插入一条数据';
+          res.status(200).json({
+            code: 200,
+            summary: 'success',
+            data: log_data
+          })
+        })
+    } else {
+      res.status(200).json({
+        code: 200,
+        summary: 'success',
+        data: 'not found this database'
+      })
+    }
+  } catch (error) {
+    console.log(error)
+  }
+})
+
+//inverter_error_updates
+router.post('/inverter_error', async function (req, res, next) {
+  try {
+    //电站id
+    let station_id = '4334';
+    //采集器唯一标识：macAddress
+    let mac_address = '69:23:9c:76:c8:01';
+    //采集错误ID
+    let error_id = 100;
+    // 所属设备sn
+    let error_sn = '12345';
+    // 告警等级 (提示：0，警告：1，故障：2)
+    let error_level = Math.floor(Math.random() + 0.5);
+    // 告警状态 (未处理：0，处理中：1，已处理：2)
+    let error_status = Math.floor(Math.random() + 0.5);
+    //告警信息
+    let error_info = 'test'
+    //最后更新时间
+    let last_updated = new Date();
+    const { database } = req.body;
+    console.log(database);
+    let message = {
+      station_id: station_id,
+      mac_address: mac_address,
+      error_id: error_id,
+      error_sn: error_sn,
+      error_level: error_level,
+      error_status: error_status,
+      error_info: error_info,
+      last_updated: last_updated
+    }
+    if (database == 'Redis') {
+      //保存数据到redis
+      console.log('保存数据到redis');
+      redis.set('error_updates', JSON.stringify(message))
+        .then(() => {
+          //发布频道
+          redis.publish('inverter_error_updates', 'error_updates');
+          let log_data = 'inverter_error_updates';
+          res.status(200).json({
+            code: 200,
+            summary: 'success',
+            data: log_data
+          })
+        })
+    } else {
+      res.status(200).json({
+        code: 200,
+        summary: 'success',
+        data: 'not found this database'
+      })
+    }
+  } catch (error) {
+    console.log(error)
+  }
+})
+
+//
 module.exports = router;
