@@ -1,69 +1,33 @@
 const redis = require('redis');
-const { promisify } = require('util');
+//用于操作redis数据
+const redisClient = redis.createClient("redis://" + "127.0.0.1" + ":" + 6379, {
+  auth_pass: "Fx123456",
+});
+//用于订阅频道
+// const redisClientSub = redis.createClient("redis://" + host + ":" + port, {
+//   auth_pass: auth_pass,
+// });
+// const channels = ['inverter_power_data', 'inverter_error_updates', 'power_status_updates'];
+// function subscribe(channelName) {
+//   redisClientSub.subscribe(channelName, (error, channel) => {
+//     if (error) {
+//       throw new Error(error);
+//     }
+//   });
+// }
+//订阅所有频道
+// channels.forEach((e) => {
+//   subscribe(e);
+// });
+redisClient.on('connect', function () {
+  console.log('Connected to Redis server');
+});
 
-class RedisClient {
-  constructor(host, port, password) {
-    this.client = redis.createClient({
-      host: host,
-      port: port,
-      password: password
-    });
-    this.getAsync = promisify(this.client.get).bind(this.client);
-    this.hmgetAsync = promisify(this.client.hmget).bind(this.client);
-    this.hmsetAsync = promisify(this.client.hmset).bind(this.client);
-    this.setAsync = promisify(this.client.set).bind(this.client);
-    this.delAsync = promisify(this.client.del).bind(this.client);
-    this.expireAsync = promisify(this.client.expire).bind(this.client);
-    this.publishAsync = promisify(this.client.publish).bind(this.client);
-    this.subscribeAsync = promisify(this.client.subscribe).bind(this.client);
-    this.unsubscribeAsync = promisify(this.client.unsubscribe).bind(this.client);
-  }
+redisClient.on('error', function (err) {
+  console.error('Error connecting to Redis server:', err);
+});
 
-  async get(key) {
-    return await this.getAsync(key);
-  }
-
-  async hmget(key, fields) {
-    return await this.hmgetAsync(key, fields);
-  }
-
-  async hmset(key, values) {
-    return await this.hmsetAsync(key, values);
-  }
-
-  async set(key, value) {
-    return await this.setAsync(key, value);
-  }
-
-  async del(key) {
-    return await this.delAsync(key);
-  }
-
-  async expire(key, seconds) {
-    return await this.expireAsync(key, seconds);
-  }
-
-  async close() {
-    return await this.client.quit();
-  }
-
-  async subscribe(channel, callback) {
-    await this.subscribeAsync(channel);
-    this.client.on('message', (subscribedChannel, message) => {
-      if (subscribedChannel === channel) {
-        callback(message);
-      }
-    });
-  }
-
-  async unsubscribe(channel, callback) {
-    this.client.off('message', callback);
-    await this.unsubscribeAsync(channel);
-  }
-
-  async publish(channel, message) {
-    return await this.publishAsync(channel, message);
-  }
-}
-
-module.exports = RedisClient;
+module.exports = {
+  redisClient,
+  // redisClientSub
+};

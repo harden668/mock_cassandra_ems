@@ -1,7 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const RedisClient = require("../controller/redis_con");
-const redis = new RedisClient("127.0.0.1", 6379, "Fx123456");
+const { redisClient } = require('../controller/redis_con');
 const { queryData, InsertData } = require("../controller/cassandra_con.js");
 const kafka = require("kafka-node");
 const zeroPad = require("../utils/zeroPad");
@@ -26,14 +25,14 @@ router.post("/inverter_data", async function (req, res, next) {
     let current_mode_text = [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13];
     let current_mode =
       current_mode_text[
-        Math.floor(Math.random() * current_mode_text.length) - 1
+      Math.floor(Math.random() * current_mode_text.length) - 1
       ];
     //设备运行状态
     //0-等待 1-检查 2-正常 3-故障 5-升级 6-关机 -1离线
     let device_status_text = [0, 1, 2, 3, 5, 6, -1];
     let device_status =
       device_status_text[
-        Math.floor(Math.random() * device_status_text.length) - 1
+      Math.floor(Math.random() * device_status_text.length) - 1
       ];
     //电网功率
     let grid_power = Math.floor(Math.random() * 200) + 100;
@@ -50,18 +49,18 @@ router.post("/inverter_data", async function (req, res, next) {
     // ];
     let hardware_error =
       hardware_error_text[
-        Math.floor(Math.random() * hardware_error_text.length) - 1
+      Math.floor(Math.random() * hardware_error_text.length) - 1
       ];
     //mac地址
-    let mac_address = "69:23:9c:76:c8:01";
+    let mac_address = "69:23:9c:76:c8:02";
     //电池功率
     let power_consumption = Math.floor(Math.random() * 200) + 100;
     //实时发电功率
     let real_time_power = Math.floor(Math.random() * 200) + 100;
     //从数据库获取最后一次插入的数据
     let timestamp = new Date();
-    const { database } = req.body;
-    console.log(database);
+    // const { database } = req.body;
+    // console.log(database);
     let Insert_sql = `INSERT INTO ems.inverter_data(
       battery_power,
       current_mode,
@@ -113,120 +112,36 @@ router.post("/inverter_data", async function (req, res, next) {
       device_feed_in_energy_day: global.device_feed_in_energy_day,
       timestamp: timestamp,
     };
-    if (database == "Cassandra") {
-      console.log("params", params);
-      let result = await InsertData(Insert_sql, params);
-      let log_data = "成功向cassandra_inverter_data插入一条数据";
-      redis.hmset("inverter_data", message).then(() => {
-        //发布频道
-        redis.publish("mock_pub_inverter", "inverter_data");
-      });
-      console.log("result", result);
-      if (result) {
-        global.pv_output_energy_day =
-          global.pv_output_energy_day + Math.floor(Math.random() * 10) + 1;
-        global.inverter_grid_energy_day =
-          global.inverter_grid_energy_day + Math.floor(Math.random() * 10) + 1;
-        global.inverter_eps_energy_day =
-          global.inverter_eps_energy_day + Math.floor(Math.random() * 10) + 1;
-        global.device_generation_energy_day =
-          global.device_generation_energy_day +
-          Math.floor(Math.random() * 10) +
-          1;
-        global.local_consumption_energy_day =
-          global.local_consumption_energy_day +
-          Math.floor(Math.random() * 10) +
-          1;
-        global.device_feed_in_energy_day =
-          global.device_feed_in_energy_day + Math.floor(Math.random() * 10) + 1;
-        res.status(200).json({
-          code: 200,
-          summary: "success",
-          data: log_data,
-        });
-      } else {
-        res.status(200).json({
-          code: 200,
-          summary: "not found",
-          data: "not found the database",
-        });
-      }
-    } else if (database == "Redis") {
-      //保存数据到redis
-      console.log("保存数据到redis");
-      redis.hmset("inverter_data", message).then(() => {
-        //发布频道
-        redis.publish("mock_pub_inverter", "inverter_data");
-        let log_data = "成功向redis_inverter_data插入一条数据";
-        global.pv_output_energy_day =
-          global.pv_output_energy_day + Math.floor(Math.random() * 10) + 1;
-        global.inverter_grid_energy_day =
-          global.inverter_grid_energy_day + Math.floor(Math.random() * 10) + 1;
-        global.inverter_eps_energy_day =
-          global.inverter_eps_energy_day + Math.floor(Math.random() * 10) + 1;
-        global.device_generation_energy_day =
-          global.device_generation_energy_day +
-          Math.floor(Math.random() * 10) +
-          1;
-        global.local_consumption_energy_day =
-          global.local_consumption_energy_day +
-          Math.floor(Math.random() * 10) +
-          1;
-        global.device_feed_in_energy_day =
-          global.device_feed_in_energy_day + Math.floor(Math.random() * 10) + 1;
-        res.status(200).json({
-          code: 200,
-          summary: "success",
-          data: log_data,
-        });
-      });
-    } else if (database == "Kafka") {
-      let payloads = [
-        {
-          topic: "test",
-          messages: JSON.stringify(message),
-        },
-      ];
-      console.log("payloads", payloads);
-      let producer_id = "inverter_data";
-      producer1.send(payloads, (err, data) => {
-        if (err) {
-          console.error("Failed to send message:", err);
-        } else {
-          console.log("Message sent:", data);
-          global.pv_output_energy_day =
-            global.pv_output_energy_day + Math.floor(Math.random() * 10) + 1;
-          global.inverter_grid_energy_day =
-            global.inverter_grid_energy_day +
-            Math.floor(Math.random() * 10) +
-            1;
-          global.inverter_eps_energy_day =
-            global.inverter_eps_energy_day + Math.floor(Math.random() * 10) + 1;
-          global.device_generation_energy_day =
-            global.device_generation_energy_day +
-            Math.floor(Math.random() * 10) +
-            1;
-          global.local_consumption_energy_day =
-            global.local_consumption_energy_day +
-            Math.floor(Math.random() * 10) +
-            1;
-          global.device_feed_in_energy_day =
-            global.device_feed_in_energy_day +
-            Math.floor(Math.random() * 10) +
-            1;
-          let log_data = "成功向Kafka_inverter_data插入一条数据";
-          res.status(200).json({
-            code: 200,
-            summary: "success",
-            data: log_data,
-          });
-        }
+    let result = await InsertData(Insert_sql, params);
+    let log_data = "成功向cassandra_inverter_data插入一条数据";
+    console.log("result", result);
+    if (result) {
+      global.pv_output_energy_day =
+        global.pv_output_energy_day + Math.floor(Math.random() * 10) + 1;
+      global.inverter_grid_energy_day =
+        global.inverter_grid_energy_day + Math.floor(Math.random() * 10) + 1;
+      global.inverter_eps_energy_day =
+        global.inverter_eps_energy_day + Math.floor(Math.random() * 10) + 1;
+      global.device_generation_energy_day =
+        global.device_generation_energy_day +
+        Math.floor(Math.random() * 10) +
+        1;
+      global.local_consumption_energy_day =
+        global.local_consumption_energy_day +
+        Math.floor(Math.random() * 10) +
+        1;
+      global.device_feed_in_energy_day =
+        global.device_feed_in_energy_day + Math.floor(Math.random() * 10) + 1;
+      res.status(200).json({
+        code: 200,
+        summary: "success",
+        data: log_data,
       });
     } else {
       res.status(200).json({
         code: 200,
-        summary: "success",
-        data: "not found this database",
+        summary: "not found",
+        data: "not found the database",
       });
     }
   } catch (error) {
@@ -237,8 +152,6 @@ router.post("/inverter_data", async function (req, res, next) {
 //模拟pv_optimizer_data
 router.post("/pv_optimizer_data", async function (req, res, next) {
   try {
-    const { database } = req.body;
-    console.log(database);
     // 返回指定范围的随机数(m-n之间)的公式:
     // Math.random() * (n - m) + m
     //状态
@@ -256,7 +169,7 @@ router.post("/pv_optimizer_data", async function (req, res, next) {
     let fault_code =
       fault_code_text[Math.floor(Math.random() * fault_code_text.length) - 1];
     //mac地址
-    let mac_address = "69:23:9c:76:c8:03";
+    let mac_address = "69:23:9c:76:c8:02";
     // sn
     let Optimizer_sn = "0123456789abcdef";
     //输入电压1
@@ -330,80 +243,25 @@ router.post("/pv_optimizer_data", async function (req, res, next) {
       temperature: temperature,
       timestamp: timestamp,
     };
-    if (database == "Cassandra") {
-      console.log("params", params);
-      //保存数据到Cassandra
-      let result = await InsertData(sql, params);
-      redis.hmset("pv_optimizer_data", message).then(() => {
-        //发布频道
-        redis.publish("mock_pub_pv_optimizer", "pv_optimizer_data");
-      });
-      let log_data = "成功向cassandra_pv_optimizer_data插入一条数据";
-      console.log("result", result);
-      if (result) {
-        global.power_generation1 =
-          global.power_generation1 + Math.floor(Math.random() * 10) + 1;
-        global.power_generation2 =
-          global.power_generation2 + Math.floor(Math.random() * 10) + 1;
-        res.status(200).json({
-          code: 200,
-          summary: "success",
-          data: log_data,
-        });
-      } else {
-        res.status(200).json({
-          code: 200,
-          summary: "not found",
-          data: "not found the database",
-        });
-      }
-    } else if (database == "Redis") {
-      //保存数据到redis
-      console.log("保存数据到redis");
-      redis.hmset("pv_optimizer_data", message).then(() => {
-        //发布频道
-        redis.publish("mock_pub_pv_optimizer", "pv_optimizer_data");
-        let log_data = "成功向redis_pv_optimizer_data插入一条数据";
-        global.power_generation1 =
-          global.power_generation1 + Math.floor(Math.random() * 10) + 1;
-        global.power_generation2 =
-          global.power_generation2 + Math.floor(Math.random() * 10) + 1;
-        res.status(200).json({
-          code: 200,
-          summary: "success",
-          data: log_data,
-        });
-      });
-    } else if (database == "Kafka") {
-      let payloads = [
-        {
-          topic: "test",
-          messages: JSON.stringify(message),
-        },
-      ];
-      console.log("payloads", payloads);
-      producer2.send(payloads, (err, data) => {
-        if (err) {
-          console.error("Failed to send message:", err);
-        } else {
-          console.log("Message sent:", data);
-          global.power_generation1 =
-            global.power_generation1 + Math.floor(Math.random() * 10) + 1;
-          global.power_generation2 =
-            global.power_generation2 + Math.floor(Math.random() * 10) + 1;
-          let log_data = "成功向Kafka_pv_optimizer_data插入一条数据";
-          res.status(200).json({
-            code: 200,
-            summary: "success",
-            data: log_data,
-          });
-        }
+    //保存数据到Cassandra
+    let result = await InsertData(sql, params);
+    let log_data = "成功向cassandra_pv_optimizer_data插入一条数据";
+    console.log("result", result);
+    if (result) {
+      global.power_generation1 =
+        global.power_generation1 + Math.floor(Math.random() * 10) + 1;
+      global.power_generation2 =
+        global.power_generation2 + Math.floor(Math.random() * 10) + 1;
+      res.status(200).json({
+        code: 200,
+        summary: "success",
+        data: log_data,
       });
     } else {
       res.status(200).json({
         code: 200,
-        summary: "success",
-        data: "not found this database",
+        summary: "not found",
+        data: "not found the database",
       });
     }
   } catch (error) {
@@ -413,12 +271,10 @@ router.post("/pv_optimizer_data", async function (req, res, next) {
 //模拟statistical_data
 router.post("/statistical_data", async function (req, res, next) {
   try {
-    const { database } = req.body;
-    console.log(database);
     //时间戳
     let timestamp = new Date();
 
-    let mac_address = "69:23:9c:76:c8:01";
+    let mac_address = "69:23:9c:76:c8:02";
 
     let sql = `INSERT INTO ems.statistical_data(
         device_feed_in_energy,
@@ -508,131 +364,84 @@ router.post("/statistical_data", async function (req, res, next) {
       pv_output_time: global.pv_output_time,
       timestamp: timestamp,
     };
-    if (database == "Cassandra") {
-      console.log("params", params);
-      //保存数据到Cassandra
-      let result = await InsertData(sql, params);
-      let log_data = "成功向cassandra_statistical_data插入一条数据";
-      redis.hmset("statistical_data", message).then(() => {
-        //发布频道
-        redis.publish("mock_pub_statistical_data", "statistical_data");
-      });
-      if (result) {
-        global.pv_output_energy =
-          global.pv_output_energy + Math.floor(Math.random() * 10) + 1;
-        global.pv_output_energy_month =
-          global.pv_output_energy_month + Math.floor(Math.random() * 10) + 1;
-        global.pv_output_energy_year =
-          global.pv_output_energy_year + Math.floor(Math.random() * 10) + 1;
-        global.inverter_grid_energy =
-          global.inverter_grid_energy + Math.floor(Math.random() * 10) + 1;
-        global.inverter_grid_energy_month =
-          global.inverter_grid_energy_month +
-          Math.floor(Math.random() * 10) +
-          1;
-        global.inverter_grid_energy_year =
-          global.inverter_grid_energy_year + Math.floor(Math.random() * 10) + 1;
-        global.inverter_eps_energy =
-          global.inverter_eps_energy + Math.floor(Math.random() * 10) + 1;
-        global.inverter_eps_energy_month =
-          global.inverter_eps_energy_month + Math.floor(Math.random() * 10) + 1;
-        global.inverter_eps_energy_year =
-          global.inverter_eps_energy_year + Math.floor(Math.random() * 10) + 1;
-        global.device_generation_energy =
-          global.device_generation_energy + Math.floor(Math.random() * 10) + 1;
-        global.device_generation_energy_month =
-          global.device_generation_energy_month +
-          Math.floor(Math.random() * 10) +
-          1;
-        global.device_generation_energy_year =
-          global.device_generation_energy_year +
-          Math.floor(Math.random() * 10) +
-          1;
-        global.local_consumption_energy =
-          global.local_consumption_energy + Math.floor(Math.random() * 10) + 1;
-        global.local_consumption_energy_month =
-          global.local_consumption_energy_month +
-          Math.floor(Math.random() * 10) +
-          1;
-        global.local_consumption_energy_year =
-          global.local_consumption_energy_year +
-          Math.floor(Math.random() * 10) +
-          1;
-        global.device_feed_in_energy =
-          global.device_feed_in_energy + Math.floor(Math.random() * 10) + 1;
-        global.device_feed_in_energy_month =
-          global.device_feed_in_energy_month +
-          Math.floor(Math.random() * 10) +
-          1;
-        global.device_feed_in_energy_year =
-          global.device_feed_in_energy_year +
-          Math.floor(Math.random() * 10) +
-          1;
-        global.pv_output_time =
-          global.pv_output_time + Math.floor(Math.random() * 10) + 1;
-        global.inverter_grid_time =
-          global.inverter_grid_time + Math.floor(Math.random() * 10) + 1;
-        global.inverter_eps_time =
-          global.inverter_eps_time + Math.floor(Math.random() * 10) + 1;
-        global.device_generation_time =
-          global.device_generation_time + Math.floor(Math.random() * 10) + 1;
-        global.local_consumption_time =
-          global.local_consumption_time + Math.floor(Math.random() * 10) + 1;
-        global.device_feed_in_time =
-          global.device_feed_in_time + Math.floor(Math.random() * 10) + 1;
-        global.device_running_time =
-          global.device_running_time + Math.floor(Math.random() * 10) + 1;
-        res.status(200).json({
-          code: 200,
-          summary: "success",
-          data: log_data,
-        });
-      } else {
-        res.status(200).json({
-          code: 200,
-          summary: "not found",
-          data: "not found the database",
-        });
-      }
-    } else if (database == "Redis") {
-      //保存数据到redis
-      console.log("保存数据到redis");
-      redis.hmset("statistical_data", message).then(() => {
-        //发布频道
-        redis.publish("mock_pub_statistical_data", "statistical_data");
-        let log_data = "成功向redis_statistical_data插入一条数据";
-        res.status(200).json({
-          code: 200,
-          summary: "success",
-          data: log_data,
-        });
-      });
-    } else if (database == "Kafka") {
-      let payloads = [
-        {
-          topic: "test",
-          messages: JSON.stringify(message),
-        },
-      ];
-      console.log("payloads", payloads);
-      producer2.send(payloads, (err, data) => {
-        if (err) {
-          console.error("Failed to send message:", err);
-        } else {
-          console.log("Message sent:", data);
-          let log_data = "成功向Kafka_statistical_data插入一条数据";
-          res.status(200).json({
-            code: 200,
-            summary: "success",
-            data: log_data,
-          });
-        }
+    //保存数据到Cassandra
+    let result = await InsertData(sql, params);
+    let log_data = "成功向cassandra_statistical_data插入一条数据";
+    if (result) {
+      global.pv_output_energy =
+        global.pv_output_energy + Math.floor(Math.random() * 10) + 1;
+      global.pv_output_energy_month =
+        global.pv_output_energy_month + Math.floor(Math.random() * 10) + 1;
+      global.pv_output_energy_year =
+        global.pv_output_energy_year + Math.floor(Math.random() * 10) + 1;
+      global.inverter_grid_energy =
+        global.inverter_grid_energy + Math.floor(Math.random() * 10) + 1;
+      global.inverter_grid_energy_month =
+        global.inverter_grid_energy_month +
+        Math.floor(Math.random() * 10) +
+        1;
+      global.inverter_grid_energy_year =
+        global.inverter_grid_energy_year + Math.floor(Math.random() * 10) + 1;
+      global.inverter_eps_energy =
+        global.inverter_eps_energy + Math.floor(Math.random() * 10) + 1;
+      global.inverter_eps_energy_month =
+        global.inverter_eps_energy_month + Math.floor(Math.random() * 10) + 1;
+      global.inverter_eps_energy_year =
+        global.inverter_eps_energy_year + Math.floor(Math.random() * 10) + 1;
+      global.device_generation_energy =
+        global.device_generation_energy + Math.floor(Math.random() * 10) + 1;
+      global.device_generation_energy_month =
+        global.device_generation_energy_month +
+        Math.floor(Math.random() * 10) +
+        1;
+      global.device_generation_energy_year =
+        global.device_generation_energy_year +
+        Math.floor(Math.random() * 10) +
+        1;
+      global.local_consumption_energy =
+        global.local_consumption_energy + Math.floor(Math.random() * 10) + 1;
+      global.local_consumption_energy_month =
+        global.local_consumption_energy_month +
+        Math.floor(Math.random() * 10) +
+        1;
+      global.local_consumption_energy_year =
+        global.local_consumption_energy_year +
+        Math.floor(Math.random() * 10) +
+        1;
+      global.device_feed_in_energy =
+        global.device_feed_in_energy + Math.floor(Math.random() * 10) + 1;
+      global.device_feed_in_energy_month =
+        global.device_feed_in_energy_month +
+        Math.floor(Math.random() * 10) +
+        1;
+      global.device_feed_in_energy_year =
+        global.device_feed_in_energy_year +
+        Math.floor(Math.random() * 10) +
+        1;
+      global.pv_output_time =
+        global.pv_output_time + Math.floor(Math.random() * 10) + 1;
+      global.inverter_grid_time =
+        global.inverter_grid_time + Math.floor(Math.random() * 10) + 1;
+      global.inverter_eps_time =
+        global.inverter_eps_time + Math.floor(Math.random() * 10) + 1;
+      global.device_generation_time =
+        global.device_generation_time + Math.floor(Math.random() * 10) + 1;
+      global.local_consumption_time =
+        global.local_consumption_time + Math.floor(Math.random() * 10) + 1;
+      global.device_feed_in_time =
+        global.device_feed_in_time + Math.floor(Math.random() * 10) + 1;
+      global.device_running_time =
+        global.device_running_time + Math.floor(Math.random() * 10) + 1;
+      res.status(200).json({
+        code: 200,
+        summary: "success",
+        data: log_data,
       });
     } else {
       res.status(200).json({
         code: 200,
-        summary: "success",
-        data: "not found this database",
+        summary: "not found",
+        data: "not found the database",
       });
     }
   } catch (error) {
@@ -643,10 +452,14 @@ router.post("/statistical_data", async function (req, res, next) {
 //模拟power_station
 router.post("/power_station", async function (req, res, next) {
   try {
-    const { database } = req.body;
-    console.log(database);
     //电站id
     let station_id = 1;
+    //电池总功率
+    let battery_power = Math.floor(Math.random() * 200) + 100;
+    //电网总功率
+    let grid_power = Math.floor(Math.random() * 200) + 100;
+    //电池总功率
+    let power_consumption = Math.floor(Math.random() * 200) + 100;
     //总发电功率
     let real_time_power = Math.floor(Math.random() * 200) + 100;
     //时间戳
@@ -654,17 +467,35 @@ router.post("/power_station", async function (req, res, next) {
     let sql = `INSERT INTO ems.power_station(
           station_id,
           timestamp,
-          real_time_power ,,
+          battery_power,
+          grid_power,
+          power_consumption,
+          real_time_power,
+          pv_output_energy_day,
+          local_consumption_energy_day,
+          inverter_grid_energy_day,
+          device_feed_in_energy_day,
+          device_generation_energy_day,
+          inverter_eps_energy_day,
           day_full_hours,
           month_full_hours,
           year_full_hours,
           running_days
     )
-    VALUES( ?,?,?,?,?,?,?,?,?,? )`;
+    VALUES( ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? )`;
     let params = [
       station_id,
       timestamp,
+      battery_power,
+      grid_power,
+      power_consumption,
       real_time_power,
+      global.pv_output_energy_day,
+      global.inverter_grid_energy_day,
+      global.inverter_eps_energy_day,
+      global.device_generation_energy_day,
+      global.local_consumption_energy_day,
+      global.device_feed_in_energy_day,
       global.day_full_hours,
       global.month_full_hours,
       global.year_full_hours,
@@ -679,92 +510,29 @@ router.post("/power_station", async function (req, res, next) {
       year_full_hours: global.year_full_hours,
       running_days: global.running_days,
     };
-    if (database == "Cassandra") {
-      console.log("params", params);
-      //保存数据到Cassandra
-      let result = await InsertData(sql, params);
-      redis.hmset("power_station", message).then(() => {
-        //发布频道
-        redis.publish("mock_pub_power_station", "power_station");
-      });
-      let log_data = "成功向cassandra_power_station插入一条数据";
-      console.log("result", result);
-      if (result) {
-        global.day_full_hours =
-          global.day_full_hours + Math.floor(Math.random() * 10) + 1;
-        global.month_full_hours =
-          global.month_full_hours + Math.floor(Math.random() * 10) + 1;
-        global.year_full_hours =
-          global.year_full_hours + Math.floor(Math.random() * 10) + 1;
-        global.running_days =
-          global.running_days + Math.floor(Math.random() * 10) + 1;
-        res.status(200).json({
-          code: 200,
-          summary: "success",
-          data: log_data,
-        });
-      } else {
-        res.status(200).json({
-          code: 200,
-          summary: "not found",
-          data: "not found the database",
-        });
-      }
-    } else if (database == "Redis") {
-      //保存数据到redis
-      console.log("保存数据到redis");
-      redis.hmset("power_station", message).then(() => {
-        //发布频道
-        redis.publish("mock_pub_power_station", "power_station");
-        let log_data = "成功向redis_pv_optimizer_data插入一条数据";
-        global.day_full_hours =
-          global.day_full_hours + Math.floor(Math.random() * 10) + 1;
-        global.month_full_hours =
-          global.month_full_hours + Math.floor(Math.random() * 10) + 1;
-        global.year_full_hours =
-          global.year_full_hours + Math.floor(Math.random() * 10) + 1;
-        global.running_days =
-          global.running_days + Math.floor(Math.random() * 10) + 1;
-        res.status(200).json({
-          code: 200,
-          summary: "success",
-          data: log_data,
-        });
-      });
-    } else if (database == "Kafka") {
-      let payloads = [
-        {
-          topic: "test",
-          messages: JSON.stringify(message),
-        },
-      ];
-      console.log("payloads", payloads);
-      producer2.send(payloads, (err, data) => {
-        if (err) {
-          console.error("Failed to send message:", err);
-        } else {
-          console.log("Message sent:", data);
-          global.day_full_hours =
-            global.day_full_hours + Math.floor(Math.random() * 10) + 1;
-          global.month_full_hours =
-            global.month_full_hours + Math.floor(Math.random() * 10) + 1;
-          global.year_full_hours =
-            global.year_full_hours + Math.floor(Math.random() * 10) + 1;
-          global.running_days =
-            global.running_days + Math.floor(Math.random() * 10) + 1;
-          let log_data = "成功向Kafka_pv_optimizer_data插入一条数据";
-          res.status(200).json({
-            code: 200,
-            summary: "success",
-            data: log_data,
-          });
-        }
+    //保存数据到Cassandra
+    let result = await InsertData(sql, params);
+    let log_data = "成功向cassandra_power_station插入一条数据";
+    console.log("result", result);
+    if (result) {
+      global.day_full_hours =
+        global.day_full_hours + Math.floor(Math.random() * 10) + 1;
+      global.month_full_hours =
+        global.month_full_hours + Math.floor(Math.random() * 10) + 1;
+      global.year_full_hours =
+        global.year_full_hours + Math.floor(Math.random() * 10) + 1;
+      global.running_days =
+        global.running_days + Math.floor(Math.random() * 10) + 1;
+      res.status(200).json({
+        code: 200,
+        summary: "success",
+        data: log_data,
       });
     } else {
       res.status(200).json({
         code: 200,
-        summary: "success",
-        data: "not found this database",
+        summary: "not found",
+        data: "not found the database",
       });
     }
   } catch (error) {
@@ -773,18 +541,16 @@ router.post("/power_station", async function (req, res, next) {
 });
 
 //模拟redis发布订阅
-//inverter_power_data
-router.post("/redis_inverter_data", async function (req, res, next) {
+//power_data
+router.post("/power_data", async function (req, res, next) {
   try {
     //电站id
     let station_id = "3200";
-    //逆变器采集器唯一标识：macAddress
-    let mac_address = "69:23:9c:76:c8:01";
-    //电池功率
+    //电池总功率
     let battery_power = Math.floor(Math.random() * 200) + 100;
-    //电网功率
+    //电网总功率
     let grid_power = Math.floor(Math.random() * 200) + 100;
-    //电池功率
+    //电池总功率
     let power_consumption = Math.floor(Math.random() * 200) + 100;
     //发电总功率
     let real_time_power = Math.floor(Math.random() * 200) + 100;
@@ -795,7 +561,6 @@ router.post("/redis_inverter_data", async function (req, res, next) {
     let message = {
       battery_power: battery_power,
       grid_power: grid_power,
-      mac_address: mac_address,
       station_id: station_id,
       power_consumption: power_consumption,
       real_time_power: real_time_power,
@@ -811,9 +576,9 @@ router.post("/redis_inverter_data", async function (req, res, next) {
     if (database == "Redis") {
       //保存数据到redis
       console.log("保存数据到redis");
-      redis.set("inverter_data", JSON.stringify(message)).then(() => {
+      redisClient.hmset("power_data", station_id, JSON.stringify(message), (error, values) => {
         //发布频道
-        redis.publish("inverter_power_data", "inverter_data");
+        redisClient.publish("power_data", "inverter_data");
         let log_data = "成功向redis_inverter_data插入一条数据";
         global.pv_output_energy_day =
           global.pv_output_energy_day + Math.floor(Math.random() * 10) + 1;
@@ -850,35 +615,159 @@ router.post("/redis_inverter_data", async function (req, res, next) {
   }
 });
 
-//power_status_updates
-router.post("/power_status_updates", async function (req, res, next) {
+//optimizer_power_data
+router.post("/optimizer_power", async function (req, res, next) {
   try {
-    //经销商id
-    let station_id = "3200";
-    //逆变器采集器唯一标识：macAddress
-    let mac_address = "69:23:9c:76:c8:01";
-    //电站连接状态  "1111:0,1000:1"
-    let connect_status = "1111:0";
-
-    //逆变器状态
-    let inverter_status = Math.floor(Math.random() + 0.5);
+    //优化器sn: sn
+    let optimizer_sn = "120344wqe";
+    //输入电压1
+    let input_voltage1 = Math.floor(Math.random() * 200) + 100;
+    //输入电压2
+    let input_voltage2 = Math.floor(Math.random() * 200) + 100;
+    //输入电流1
+    let input_current1 = Math.floor(Math.random() * 200) + 100;
+    //输入电流2
+    let input_current2 = Math.floor(Math.random() * 200) + 100;
+    //输出电压
+    let output_voltage = Math.floor(Math.random() * 200) + 100;
+    //输出电流
+    let output_current = Math.floor(Math.random() * 200) + 100;
+    //输入功率1
+    let input_power1 = Math.floor(Math.random() * 200) + 100;
+    //输入功率2
+    let input_power2 = Math.floor(Math.random() * 200) + 100;
     //最后更新时间
     let last_updated = new Date();
     const { database } = req.body;
     console.log(database);
     let message = {
-      station_id: station_id,
-      mac_address: mac_address,
-      connect_status: connect_status,
-      inverter_status: inverter_status,
+      optimizer_sn: optimizer_sn,
+      input_voltage1: input_voltage1,
+      input_voltage2: input_voltage2,
+      input_current1: input_current1,
+      input_current2: input_current2,
+      output_voltage: output_voltage,
+      output_current: output_current,
+      input_power1: input_power1,
+      input_power2: input_power2,
+      power_generation1: global.power_generation1,
+      power_generation2: global.power_generation2,
       last_updated: last_updated,
     };
     if (database == "Redis") {
       //保存数据到redis
       console.log("保存数据到redis");
-      redis.set("status_updates", JSON.stringify(message)).then(() => {
+      redisClient.hmset("optimizer_power", optimizer_sn, JSON.stringify(message), (error, values) => {
         //发布频道
-        redis.publish("power_status_updates", "status_updates");
+        redisClient.publish("optimizer_power_data", "optimizer_power");
+        let log_data = "成功向optimizer_power_data插入一条数据";
+        global.power_generation1 =
+          global.power_generation1 + Math.floor(Math.random() * 10) + 1;
+        global.power_generation2 =
+          global.power_generation2 + Math.floor(Math.random() * 10) + 1;
+        res.status(200).json({
+          code: 200,
+          summary: "success",
+          data: log_data,
+        });
+      });
+    } else {
+      res.status(200).json({
+        code: 200,
+        summary: "success",
+        data: "not found this database",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+
+//inverter_status_updates
+router.post("/inverter_status", async function (req, res, next) {
+  try {
+    //逆变器采集器唯一标识：macAddress
+    let macAddress = "69:23:9c:76:c8:02";
+    //逆变器采集器状态 
+    let inverter_collect_status = Math.floor(Math.random() + 0.5);
+    //逆变器状态
+    let inverter_status = Math.floor(Math.random() + 0.5);
+    //逆变器运行模式
+    let run_model = Math.floor(Math.random() * 10 + 1);
+    //电池状态
+    let battery_status = Math.floor(Math.random() + 0.5);
+    //电表状态
+    let voltmeter_status = Math.floor(Math.random() + 0.5);
+    //最后更新时间
+    let last_updated = new Date();
+    const { database } = req.body;
+    console.log(database);
+    let message = {
+      macAddress: macAddress,
+      inverter_collect_status: inverter_collect_status,
+      inverter_status: inverter_status,
+      run_model: run_model,
+      battery_status: battery_status,
+      voltmeter_status: voltmeter_status,
+      last_updated: last_updated,
+    };
+    if (database == "Redis") {
+      //保存数据到redis
+      console.log("保存数据到redis");
+      redisClient.hmset("inverter_status", macAddress, JSON.stringify(message), (err, values) => {
+        //发布频道
+        redisClient.publish("inverter_status_updates", "inverter_status");
+        let log_data = "成功向power_status_updates插入一条数据";
+        res.status(200).json({
+          code: 200,
+          summary: "success",
+          data: log_data,
+        });
+      });
+    } else {
+      res.status(200).json({
+        code: 200,
+        summary: "success",
+        data: "not found this database",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+//optimizer_status_updates
+router.post("/optimizer_status", async function (req, res, next) {
+  try {
+    //优化器采集器唯一标识：macAddress
+    let macAddress = "69:23:9c:76:c8:01";
+    //优化器标识
+    let optimizer_sn = "1212e31qe1";
+    //优化器采集器状态 
+    let optimizer_collect_status = Math.floor(Math.random() + 0.5);
+    //优化器状态
+    let optimizer_status = Math.floor(Math.random() + 0.5);
+    //光伏板状态
+    let pv_status = Math.floor(Math.random() + 0.5);
+    //最后更新时间
+    let last_updated = new Date();
+    const { database } = req.body;
+    console.log(database);
+    let message = {
+      macAddress: macAddress,
+      optimizer_sn: optimizer_sn,
+      optimizer_collect_status: optimizer_collect_status,
+      optimizer_status: optimizer_status,
+      pv_status: pv_status,
+      last_updated: last_updated,
+    };
+    if (database == "Redis") {
+      //保存数据到redis
+      console.log("保存数据到redis");
+      redisClient.hmset("optimizer_status", macAddress, JSON.stringify(message), (error, values) => {
+        //发布频道
+        redisClient.publish("optimizer_status_updates", "optimizer_status");
         let log_data = "成功向power_status_updates插入一条数据";
         res.status(200).json({
           code: 200,
@@ -901,41 +790,86 @@ router.post("/power_status_updates", async function (req, res, next) {
 //inverter_error_updates
 router.post("/inverter_error", async function (req, res, next) {
   try {
-    //电站id
-    let station_id = "4334";
     //采集器唯一标识：macAddress
-    let mac_address = "69:23:9c:76:c8:01";
+    let macAddress = "69:23:9c:76:c8:01";
     //采集错误ID
     let error_id = 100;
-    // 所属设备sn
+    // 所属逆变器sn
     let error_sn = "12345";
     // 告警等级 (提示：0，警告：1，故障：2)
     let error_level = Math.floor(Math.random() + 0.5);
     // 告警状态 (未处理：0，处理中：1，已处理：2)
     let error_status = Math.floor(Math.random() + 0.5);
-    //告警信息
-    let error_info = "test";
     //最后更新时间
     let last_updated = new Date();
     const { database } = req.body;
     console.log(database);
     let message = {
-      station_id: station_id,
-      mac_address: mac_address,
+      macAddress: macAddress,
       error_id: error_id,
       error_sn: error_sn,
       error_level: error_level,
       error_status: error_status,
-      error_info: error_info,
       last_updated: last_updated,
     };
     if (database == "Redis") {
       //保存数据到redis
       console.log("保存数据到redis");
-      redis.set("error_updates", JSON.stringify(message)).then(() => {
+      redisClient.hmset("inverter_error", macAddress, JSON.stringify(message), (error, values) => {
         //发布频道
-        redis.publish("inverter_error_updates", "error_updates");
-        let log_data = "inverter_error_updates";
+        redisClient.publish("inverter_error_updates ", "inverter_error");
+        let log_data = "成功向inverter_error_updates插入一条数据";
+        res.status(200).json({
+          code: 200,
+          summary: "success",
+          data: log_data,
+        });
+      });
+    } else {
+      res.status(200).json({
+        code: 200,
+        summary: "success",
+        data: "not found this database",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+
+//optimizer_error_updates
+router.post("/optimizer_error", async function (req, res, next) {
+  try {
+    //优化器采集器唯一标识：macAddress
+    let macAddress = "69:23:9c:76:c8:01";
+    //采集错误ID
+    let error_id = 100;
+    // 所属优化器sn
+    let error_sn = "12345";
+    // 告警等级 (提示：0，警告：1，故障：2)
+    let error_level = Math.floor(Math.random() + 0.5);
+    // 告警状态 (未处理：0，处理中：1，已处理：2)
+    let error_status = Math.floor(Math.random() + 0.5);
+    //最后更新时间
+    let last_updated = new Date();
+    const { database } = req.body;
+    console.log(database);
+    let message = {
+      macAddress: macAddress,
+      error_id: error_id,
+      error_sn: error_sn,
+      error_level: error_level,
+      error_status: error_status,
+      last_updated: last_updated,
+    };
+    if (database == "Redis") {
+      //保存数据到redis
+      console.log("保存数据到redis");
+      redisClient.hmset("optimizer_error", macAddress, JSON.stringify(message), (error, values) => {
+        //发布频道
+        redisClient.publish("optimizer_error_updates ", "optimizer_error");
+        let log_data = "成功向optimizer_error_updates插入一条数据";
         res.status(200).json({
           code: 200,
           summary: "success",
