@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const { redisClient } = require('../controller/redis_con');
+const { redisClient, redisClientSub } = require('../controller/redis_con');
 const { queryData, InsertData } = require("../controller/cassandra_con.js");
 const kafka = require("kafka-node");
 const zeroPad = require("../utils/zeroPad");
@@ -471,12 +471,12 @@ router.post("/power_station", async function (req, res, next) {
           grid_power,
           power_consumption,
           real_time_power,
-          pv_output_energy_day,
-          local_consumption_energy_day,
-          inverter_grid_energy_day,
-          device_feed_in_energy_day,
-          device_generation_energy_day,
-          inverter_eps_energy_day,
+          pv_output_energy,
+          local_consumption_energy,
+          inverter_grid_energy,
+          device_feed_in_energy,
+          device_generation_energy,
+          inverter_eps_energy,
           day_full_hours,
           month_full_hours,
           year_full_hours,
@@ -490,12 +490,12 @@ router.post("/power_station", async function (req, res, next) {
       grid_power,
       power_consumption,
       real_time_power,
-      global.pv_output_energy_day,
-      global.inverter_grid_energy_day,
-      global.inverter_eps_energy_day,
-      global.device_generation_energy_day,
-      global.local_consumption_energy_day,
-      global.device_feed_in_energy_day,
+      global.pv_output_energy,
+      global.inverter_grid_energy,
+      global.inverter_eps_energy,
+      global.device_generation_energy,
+      global.local_consumption_energy,
+      global.device_feed_in_energy,
       global.day_full_hours,
       global.month_full_hours,
       global.year_full_hours,
@@ -515,6 +515,70 @@ router.post("/power_station", async function (req, res, next) {
     let log_data = "成功向cassandra_power_station插入一条数据";
     console.log("result", result);
     if (result) {
+      global.pv_output_energy =
+        global.pv_output_energy + Math.floor(Math.random() * 10) + 1;
+      global.pv_output_energy_month =
+        global.pv_output_energy_month + Math.floor(Math.random() * 10) + 1;
+      global.pv_output_energy_year =
+        global.pv_output_energy_year + Math.floor(Math.random() * 10) + 1;
+      global.inverter_grid_energy =
+        global.inverter_grid_energy + Math.floor(Math.random() * 10) + 1;
+      global.inverter_grid_energy_month =
+        global.inverter_grid_energy_month +
+        Math.floor(Math.random() * 10) +
+        1;
+      global.inverter_grid_energy_year =
+        global.inverter_grid_energy_year + Math.floor(Math.random() * 10) + 1;
+      global.inverter_eps_energy =
+        global.inverter_eps_energy + Math.floor(Math.random() * 10) + 1;
+      global.inverter_eps_energy_month =
+        global.inverter_eps_energy_month + Math.floor(Math.random() * 10) + 1;
+      global.inverter_eps_energy_year =
+        global.inverter_eps_energy_year + Math.floor(Math.random() * 10) + 1;
+      global.device_generation_energy =
+        global.device_generation_energy + Math.floor(Math.random() * 10) + 1;
+      global.device_generation_energy_month =
+        global.device_generation_energy_month +
+        Math.floor(Math.random() * 10) +
+        1;
+      global.device_generation_energy_year =
+        global.device_generation_energy_year +
+        Math.floor(Math.random() * 10) +
+        1;
+      global.local_consumption_energy =
+        global.local_consumption_energy + Math.floor(Math.random() * 10) + 1;
+      global.local_consumption_energy_month =
+        global.local_consumption_energy_month +
+        Math.floor(Math.random() * 10) +
+        1;
+      global.local_consumption_energy_year =
+        global.local_consumption_energy_year +
+        Math.floor(Math.random() * 10) +
+        1;
+      global.device_feed_in_energy =
+        global.device_feed_in_energy + Math.floor(Math.random() * 10) + 1;
+      global.device_feed_in_energy_month =
+        global.device_feed_in_energy_month +
+        Math.floor(Math.random() * 10) +
+        1;
+      global.device_feed_in_energy_year =
+        global.device_feed_in_energy_year +
+        Math.floor(Math.random() * 10) +
+        1;
+      global.pv_output_time =
+        global.pv_output_time + Math.floor(Math.random() * 10) + 1;
+      global.inverter_grid_time =
+        global.inverter_grid_time + Math.floor(Math.random() * 10) + 1;
+      global.inverter_eps_time =
+        global.inverter_eps_time + Math.floor(Math.random() * 10) + 1;
+      global.device_generation_time =
+        global.device_generation_time + Math.floor(Math.random() * 10) + 1;
+      global.local_consumption_time =
+        global.local_consumption_time + Math.floor(Math.random() * 10) + 1;
+      global.device_feed_in_time =
+        global.device_feed_in_time + Math.floor(Math.random() * 10) + 1;
+      global.device_running_time =
+        global.device_running_time + Math.floor(Math.random() * 10) + 1;
       global.day_full_hours =
         global.day_full_hours + Math.floor(Math.random() * 10) + 1;
       global.month_full_hours =
@@ -578,7 +642,12 @@ router.post("/power_data", async function (req, res, next) {
       console.log("保存数据到redis");
       redisClient.hmset("power_data", station_id, JSON.stringify(message), (error, values) => {
         //发布频道
-        redisClient.publish("power_data", "inverter_data");
+        let mes = {
+          hash_name: 'power_data',
+          key: station_id
+        }
+        let messName = JSON.stringify(mes);
+        redisClientSub.publish("power_data", messName);
         let log_data = "成功向redis_inverter_data插入一条数据";
         global.pv_output_energy_day =
           global.pv_output_energy_day + Math.floor(Math.random() * 10) + 1;
@@ -659,7 +728,12 @@ router.post("/optimizer_power", async function (req, res, next) {
       console.log("保存数据到redis");
       redisClient.hmset("optimizer_power", optimizer_sn, JSON.stringify(message), (error, values) => {
         //发布频道
-        redisClient.publish("optimizer_power_data", "optimizer_power");
+        let mes = {
+          hash_name: 'optimizer_power_data',
+          key: optimizer_sn
+        }
+        let messName = JSON.stringify(mes);
+        redisClientSub.publish("optimizer_power_data", messName);
         let log_data = "成功向optimizer_power_data插入一条数据";
         global.power_generation1 =
           global.power_generation1 + Math.floor(Math.random() * 10) + 1;
@@ -717,7 +791,12 @@ router.post("/inverter_status", async function (req, res, next) {
       console.log("保存数据到redis");
       redisClient.hmset("inverter_status", macAddress, JSON.stringify(message), (err, values) => {
         //发布频道
-        redisClient.publish("inverter_status_updates", "inverter_status");
+        let mes = {
+          hash_name: 'inverter_status',
+          key: macAddress
+        }
+        let messName = JSON.stringify(mes);
+        redisClientSub.publish("inverter_status_updates", messName);
         let log_data = "成功向power_status_updates插入一条数据";
         res.status(200).json({
           code: 200,
@@ -741,7 +820,7 @@ router.post("/inverter_status", async function (req, res, next) {
 router.post("/optimizer_status", async function (req, res, next) {
   try {
     //优化器采集器唯一标识：macAddress
-    let macAddress = "69:23:9c:76:c8:01";
+    let macAddress = "69:23:9c:76:c8:02";
     //优化器标识
     let optimizer_sn = "1212e31qe1";
     //优化器采集器状态 
@@ -762,13 +841,18 @@ router.post("/optimizer_status", async function (req, res, next) {
       pv_status: pv_status,
       last_updated: last_updated,
     };
-    if (database == "Redis") {
+    if (database == "Redis") if (database == "Redis") {
       //保存数据到redis
       console.log("保存数据到redis");
+      let mes = {
+        hash_name: 'optimizer_status',
+        key: macAddress
+      }
+      let messName = JSON.stringify(mes);
       redisClient.hmset("optimizer_status", macAddress, JSON.stringify(message), (error, values) => {
         //发布频道
-        redisClient.publish("optimizer_status_updates", "optimizer_status");
-        let log_data = "成功向power_status_updates插入一条数据";
+        redisClientSub.publish("optimizer_status_updates", messName);
+        let log_data = "成功向optimizer_status_updates插入一条数据";
         res.status(200).json({
           code: 200,
           summary: "success",
@@ -791,7 +875,7 @@ router.post("/optimizer_status", async function (req, res, next) {
 router.post("/inverter_error", async function (req, res, next) {
   try {
     //采集器唯一标识：macAddress
-    let macAddress = "69:23:9c:76:c8:01";
+    let macAddress = "69:23:9c:76:c8:02";
     //采集错误ID
     let error_id = 100;
     // 所属逆变器sn
@@ -817,7 +901,12 @@ router.post("/inverter_error", async function (req, res, next) {
       console.log("保存数据到redis");
       redisClient.hmset("inverter_error", macAddress, JSON.stringify(message), (error, values) => {
         //发布频道
-        redisClient.publish("inverter_error_updates ", "inverter_error");
+        let mes = {
+          hash_name: 'inverter_error',
+          key: macAddress
+        }
+        let messName = JSON.stringify(mes);
+        redisClientSub.publish("inverter_error_updates ", messName);
         let log_data = "成功向inverter_error_updates插入一条数据";
         res.status(200).json({
           code: 200,
@@ -868,7 +957,12 @@ router.post("/optimizer_error", async function (req, res, next) {
       console.log("保存数据到redis");
       redisClient.hmset("optimizer_error", macAddress, JSON.stringify(message), (error, values) => {
         //发布频道
-        redisClient.publish("optimizer_error_updates ", "optimizer_error");
+        let mes = {
+          hash_name: 'optimizer_error',
+          key: macAddress
+        }
+        let messName = JSON.stringify(mes);
+        redisClientSub.publish("optimizer_error_updates ", messName);
         let log_data = "成功向optimizer_error_updates插入一条数据";
         res.status(200).json({
           code: 200,

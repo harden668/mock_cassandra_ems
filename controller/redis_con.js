@@ -1,6 +1,9 @@
 const redis = require('redis');
 //用于操作redis数据
-const redisClient = redis.createClient("redis://" + "127.0.0.1" + ":" + 6379, {
+const redisClient = redis.createClient("redis://" + "localhost" + ":" + 6379, {
+  auth_pass: "Fx123456",
+});
+const redisClientSub = redis.createClient("redis://" + "localhost" + ":" + 6379, {
   auth_pass: "Fx123456",
 });
 //用于订阅频道
@@ -29,5 +32,5 @@ redisClient.on('error', function (err) {
 
 module.exports = {
   redisClient,
-  // redisClientSub
+  redisClientSub
 };
